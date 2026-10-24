@@ -18,4 +18,4 @@ RUN mkdir -p static/uploads
 ENV PORT=8080
 
 # Command to run the application using Gunicorn (Note: no brackets here so it can read the $PORT variable)
-CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 2 main:app
+CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 2 app:app
