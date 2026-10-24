@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Error {{ error_code }}{% endblock %}
+
+{% block content %}
+<div class="card" style="text-align: center; padding: 3rem 1rem;">
+    <h1 style="font-size: 4rem; margin-bottom: 0;">{{ error_code }}</h1>
+    <h3 style="margin-bottom: 1rem;">Something went wrong.</h3>
+    <p class="meta" style="margin-bottom: 2rem;">{{ error_message }}</p>
+    
+    <a href="{{ url_for('index') }}">
+        <button type="button">Return to Feed</button>
+    </a>
+</div>
+{% endblock %}

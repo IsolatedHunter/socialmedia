@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Error Logs{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h2 style="margin: 0;">System Error Logs</h2>
+    <a href="{{ url_for('admin') }}" style="color: var(--text); font-weight: 500;">&larr; Back to Admin</a>
+</div>
+
+<p class="meta">This tracks all 404 (Not Found), 403 (Forbidden), and 500 (Server Crash) errors.</p>
+
+<div class="card" style="border-color: #d93025; background: #fff;">
+    <form method="POST" style="margin: 0;">
+        <input type="hidden" name="action" value="clear_logs">
+        <button type="submit" class="danger-btn">Clear All Logs</button>
+    </form>
+</div>
+
+<hr>
+
+{% for log in logs %}
+    <div class="card" style="border-left: 4px solid {% if log.error_code|string == '500' %}#d93025{% else %}#fbbc04{% endif %};">
+        <div class="meta" style="display: flex; justify-content: space-between;">
+            <strong>Error {{ log.error_code }}</strong>
+            <span>{{ log.timestamp.strftime('%b %d, %H:%M:%S') }}</span>
+        </div>
+        <div style="margin-top: 10px; font-family: monospace; font-size: 0.85rem; background: #f5f5f5; padding: 10px; overflow-x: auto;">
+            <div style="color: #666; margin-bottom: 5px;">Path: {{ log.path }}</div>
+            <div style="color: var(--text);">{{ log.error_message }}</div>
+        </div>
+    </div>
+{% else %}
+    <p class="meta">No errors logged yet. Your app is running perfectly!</p>
+{% endfor %}
+{% endblock %}

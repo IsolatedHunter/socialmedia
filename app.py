@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -7,6 +7,9 @@ from datetime import datetime
 import os
 from google.cloud import storage
 import uuid
+from werkzeug.exceptions import HTTPException
+
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -53,6 +56,13 @@ class Update(db.Model):
     location = db.Column(db.String(255), nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+class ErrorLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    error_code = db.Column(db.String(10))
+    error_message = db.Column(db.Text)
+    path = db.Column(db.String(255))
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -327,5 +337,57 @@ def admin():
 
     return render_template('admin.html', users=User.query.all(), updates=Update.query.order_by(Update.timestamp.desc()).all())
 
+@app.route('/favicon.ico')
+@app.route('/apple-touch-icon.png')
+@app.route('/apple-touch-icon-precomposed.png')
+def serve_icons():
+    # Serves the icon from your static folder for all standard browser requests
+    return send_from_directory(app.static_folder, 'icon-192.png', mimetype='image/png')
+
+@app.route('/sw.js')
+def serve_sw():
+    return send_from_directory('.', 'sw.js', mimetype='application/javascript')
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    if isinstance(e, HTTPException):
+        code = e.code
+        message = e.description
+    else:
+        code = 500
+        message = str(e) or "An unexpected internal server error occurred."
+
+    # Save the error to the database
+    try:
+        new_error = ErrorLog(error_code=str(code), error_message=message, path=request.path)
+        db.session.add(new_error)
+        db.session.commit()
+    except Exception:
+        db.session.rollback() # Prevent complete failure if the database itself is the issue
+
+    return render_template('error.html', error_code=code, error_message=message), code
+
+# --- ADMIN ERROR LOGS ROUTE ---
+@app.route('/admin/errors', methods=['GET', 'POST'])
+@login_required
+def admin_errors():
+    if not current_user.is_admin:
+        abort(403)
+        
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'clear_logs':
+            ErrorLog.query.delete()
+            db.session.commit()
+            flash('All error logs have been cleared.', 'success')
+            return redirect(url_for('admin_errors'))
+            
+    logs = ErrorLog.query.order_by(ErrorLog.timestamp.desc()).all()
+    return render_template('admin_errors.html', logs=logs)
+
+@app.route('/health')
+def health_check():
+    return "OK", 200
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

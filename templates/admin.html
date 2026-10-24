@@ -8,10 +8,18 @@
 <div class="card" style="border: 2px solid var(--text);">
     <h3 style="margin-bottom: 0.5rem;">Development Tools</h3>
     <p class="meta">Populate the database with test accounts (Alice, Bob, Charlie) and sample posts.</p>
-    <form method="POST" style="margin: 0;">
-        <input type="hidden" name="action" value="generate_demo_data">
-        <button type="submit" style="background-color: var(--bg); color: var(--text); border: 1px solid var(--text);">Generate Demo Data</button>
-    </form>
+    
+    <div style="display: flex; gap: 10px;">
+        <form method="POST" style="margin: 0;">
+            <input type="hidden" name="action" value="generate_demo_data">
+            <button type="submit" style="background-color: var(--bg); color: var(--text); border: 1px solid var(--text);">Generate Demo Data</button>
+        </form>
+        
+        <!-- NEW ERROR LOGS BUTTON -->
+        <a href="{{ url_for('admin_errors') }}">
+            <button type="button" style="background-color: var(--text); color: var(--bg); border: 1px solid var(--text);">View Error Logs</button>
+        </a>
+    </div>
 </div>
 
 <hr>
