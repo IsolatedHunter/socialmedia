@@ -5,10 +5,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
+from google.cloud import storage
+import uuid
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+# Use the DATABASE_URL environment variable if it exists, otherwise fall back to local SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
@@ -57,7 +60,7 @@ def load_user(user_id):
 
 with app.app_context():
     db.create_all()
-
+    
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
@@ -66,13 +69,35 @@ def index():
         location = request.form.get('location')
         photo_file = request.files.get('photo')
         
-        filename = None
+        photo_path_or_url = None
+        
         if photo_file and photo_file.filename != '':
-            filename = secure_filename(photo_file.filename)
-            photo_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            # Generate a unique filename to prevent overwriting
+            ext = photo_file.filename.rsplit('.', 1)[1].lower() if '.' in photo_file.filename else 'jpg'
+            unique_filename = f"{uuid.uuid4().hex}.{ext}"
+            
+            gcs_bucket_name = os.environ.get('GCS_BUCKET_NAME')
+            
+            if gcs_bucket_name:
+                # SCALABLE MODE: Upload to Google Cloud Storage
+                storage_client = storage.Client()
+                bucket = storage_client.bucket(gcs_bucket_name)
+                blob = bucket.blob(unique_filename)
+                
+                # Upload the file directly from memory
+                blob.upload_from_file(photo_file, content_type=photo_file.content_type)
+                
+                # Make it publicly viewable and get the URL
+                blob.make_public()
+                photo_path_or_url = blob.public_url
+            else:
+                # LOCAL MODE: Fallback for local testing
+                secure_name = secure_filename(unique_filename)
+                photo_file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_name))
+                photo_path_or_url = secure_name # Just save the filename
             
         if content:
-            new_update = Update(content=content, location=location, photo=filename, author=current_user)
+            new_update = Update(content=content, location=location, photo=photo_path_or_url, author=current_user)
             db.session.add(new_update)
             db.session.commit()
             return redirect(url_for('index'))
