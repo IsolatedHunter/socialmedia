@@ -6,7 +6,6 @@ WORKDIR /app
 
 # Copy the requirements file and install dependencies
 COPY requirements.txt .
-# We add gunicorn here to serve the app securely in Docker
 RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
 # Copy the rest of the application code
@@ -15,8 +14,8 @@ COPY . .
 # Ensure the upload directory exists
 RUN mkdir -p static/uploads
 
-# Expose port 5000
-EXPOSE 5000
+# Set the default port for local testing, Cloud Run will override this automatically
+ENV PORT=8080
 
-# Command to run the application using Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "main:app"]
+# Command to run the application using Gunicorn (Note: no brackets here so it can read the $PORT variable)
+CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 2 main:app
