@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Join</h2>
+    <form method="POST" action="{{ request.url }}">
+        <input type="text" name="username" placeholder="Choose a Username" required>
+        <input type="password" name="password" placeholder="Choose a Password" required>
+        <input type="text" name="venmo_handle" placeholder="Venmo Handle (e.g. Hunter-123)">
+        <button type="submit">Create Account</button>
+    </form>
+</div>
+<div class="meta" style="text-align: center; margin-top: 1rem;">
+    Already have an account? <a href="{{ url_for('login', invite=request.args.get('invite')) }}" style="color: var(--text);">Sign in</a>.
+</div>
+{% endblock %}

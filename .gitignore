@@ -1,0 +1,38 @@
+Virtual Environments
+
+venv/
+.venv/
+env/
+ENV/
+
+Python Cache
+
+pycache/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+Database
+
+app.db
+instance/
+
+User Uploads
+
+(Ignores all files in the uploads folder, but we put a .gitkeep exception so the folder itself stays in the repo)
+
+static/uploads/*
+!static/uploads/.gitkeep
+
+Environment Variables
+
+.env
+.flaskenv
+
+IDE / OS Files
+
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

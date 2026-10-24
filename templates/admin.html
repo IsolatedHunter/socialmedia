@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<h2>Admin Dashboard</h2>
+<p class="meta">Manage all users and content on the platform.</p>
+
+<div class="card" style="border: 2px solid var(--text);">
+    <h3 style="margin-bottom: 0.5rem;">Development Tools</h3>
+    <p class="meta">Populate the database with test accounts (Alice, Bob, Charlie) and sample posts.</p>
+    <form method="POST" style="margin: 0;">
+        <input type="hidden" name="action" value="generate_demo_data">
+        <button type="submit" style="background-color: var(--bg); color: var(--text); border: 1px solid var(--text);">Generate Demo Data</button>
+    </form>
+</div>
+
+<hr>
+
+<h3>Users ({{ users|length }})</h3>
+{% for user in users %}
+    <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem;">
+        <div>
+            <strong>{{ user.username }}</strong>
+            {% if user.is_admin %} <span style="font-size: 0.7rem; background: #eee; padding: 2px 6px;">ADMIN</span>{% endif %}
+            {% if user.venmo_handle %} <span style="font-size: 0.7rem; color: #008CFF; margin-left: 5px;">@{{ user.venmo_handle }}</span>{% endif %}
+        </div>
+        {% if not user.is_admin %}
+        <form method="POST" style="margin: 0;">
+            <input type="hidden" name="action" value="delete_user">
+            <input type="hidden" name="item_id" value="{{ user.id }}">
+            <button type="submit" class="danger-btn">Delete</button>
+        </form>
+        {% endif %}
+    </div>
+{% endfor %}
+
+<hr>
+
+<h3>All Updates</h3>
+{% for update in updates %}
+    <div class="card">
+        <div class="meta" style="display: flex; justify-content: space-between;">
+            <span>
+                <strong>{{ update.author.username }}</strong> &mdash; {{ update.timestamp.strftime('%b %d, %H:%M') }}
+                {% if update.location %}<br>📍 {{ update.location }}{% endif %}
+            </span>
+            <form method="POST" style="margin: 0;">
+                <input type="hidden" name="action" value="delete_update">
+                <input type="hidden" name="item_id" value="{{ update.id }}">
+                <button type="submit" class="danger-btn" style="border: none; padding: 0;">Remove</button>
+            </form>
+        </div>
+        <div style="margin-top: 10px;">{{ update.content }}</div>
+        {% if update.photo %}
+            <div style="margin-top: 10px; font-size: 0.8rem; color: #666;">[Contains Photo: {{ update.photo }}]</div>
+        {% endif %}
+    </div>
+{% else %}
+    <p class="meta">No updates exist yet.</p>
+{% endfor %}
+{% endblock %}

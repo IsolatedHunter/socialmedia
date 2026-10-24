@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2 style="margin-bottom: 0.5rem;">Account Settings</h2>
+    <p class="meta">Update your profile details below.</p>
+    
+    <hr style="margin: 1rem 0 1.5rem 0;">
+
+    <form method="POST">
+        <label style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Username</label>
+        <input type="text" name="username" value="{{ current_user.username }}" required>
+        
+        <label style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Venmo Handle</label>
+        <input type="text" name="venmo_handle" value="{{ current_user.venmo_handle or '' }}" placeholder="e.g. Hunter-123">
+        
+        <hr style="margin: 1.5rem 0;">
+        
+        <label style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Change Password</label>
+        <p class="meta" style="margin-top: 0;">Leave this blank if you want to keep your current password.</p>
+        <input type="password" name="password" placeholder="New password...">
+        
+        <button type="submit" style="margin-top: 1rem;">Save Changes</button>
+    </form>
+</div>
+{% endblock %}
